@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-obsidian-50 font-sans text-obsidian-900 antialiased;
+}
+
+body.dark-theme {
+  @apply bg-obsidian-950 text-white;
+}
