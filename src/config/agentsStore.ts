@@ -1,13 +1,19 @@
 /**
  * Хелперы и дефолты для конструктора агентов.
  *
- * Хранение теперь на бэке (api/agentsApi.ts: GET/PUT /api/v1/agents).
- * Здесь остаются чистые функции: дефолтный «сид» (фолбэк для оффлайна/preview),
- * фабрика нового под-агента и обход иерархии. AGENTS из agentsArchitecture.ts —
- * источник дефолтов.
+ * Хранение — в localStorage браузера (api/agentsApi.ts).
+ * Здесь остаются чистые функции: дефолтный «сид» (стартовый набор / сброс),
+ * фабрика нового под-агента и обход иерархии.
+ *
+ * Источник дефолтов — defaultAgents.json (зашитая стартовая конфигурация,
+ * выгруженная из реальной правки в UI), чтобы все посетители видели одну
+ * и ту же карту при первом открытии.
  */
 
-import { AGENTS as DEFAULT_AGENTS, type AgentSpec } from './agentsArchitecture';
+import { type AgentSpec } from './agentsArchitecture';
+import rawDefaults from './defaultAgents.json';
+
+const DEFAULT_AGENTS = rawDefaults as unknown as AgentSpec[];
 
 function clone<T>(x: T): T {
   return JSON.parse(JSON.stringify(x)) as T;

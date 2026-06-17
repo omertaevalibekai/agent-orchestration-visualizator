@@ -1,0 +1,346 @@
+[
+  {
+    "id": "ceo",
+    "name": "CEO Agent",
+    "title": "Оркестратор · стратегия",
+    "level": "orchestrator",
+    "emoji": "👑",
+    "accent": "cyan",
+    "instruction": "Ты — CEO-агент, точка входа для руководства и стратегический советник компании. Твоя задача — собирать информацию о состоянии компании, давать краткую выжимку и выступать в роли советчика стратега для топ-менеджмента.\nЧто ты делаешь:\nРазбираешь запрос, определяешь, какие функции и отделы затронуты, и при необходимости делегируешь подзадачи специализированным агентам (HR, Sales, CFO, CMO) через handoff. Собираешь их ответы, разрешаешь противоречия и формируешь единый сжатый вывод.\n\nВсегда отвечай кратко и по делу. Структура ответа:\nСуть — выжимка в 2–3 предложениях: что происходит и главный вывод.\nКлючевые данные — 3–5 фактов/метрик из источников, без воды.\nРекомендация — конкретный совет: что стоит сделать, на что обратить внимание, какие риски учесть. Опирайся на цели компании и текущие показатели.",
+    "accessRoles": [
+      "CEO / C-level",
+      "Доступен по Whatsapp только для CEO",
+      "Ежедневно утром пару фактов за предыдущий день по компании с рекомендацией и CTA"
+    ],
+    "whatsapp": true,
+    "tools": [
+      {
+        "name": "route_to_agent",
+        "endpoint": "LangGraph handoff → hr | sales | cfo | cmo",
+        "access": "read",
+        "desc": "Делегирует подзадачу нужному специалисту и ждёт результат."
+      },
+      {
+        "name": "company_overview",
+        "endpoint": "GET /api/v1/analytic/company",
+        "access": "read",
+        "desc": "Сводная аналитика по компании."
+      },
+      {
+        "name": "rag_search",
+        "endpoint": "services/rag.py (Qdrant)",
+        "access": "read",
+        "desc": "Поиск по корпоративным документам/политикам."
+      },
+      {
+        "name": "broadcast_announcement",
+        "endpoint": "POST /api/v1/announcements",
+        "access": "write",
+        "confirm": true,
+        "desc": "Публикует объявление для компании (после подтверждения)."
+      },
+      {
+        "name": "create_task write · confirm ",
+        "endpoint": "POST /api/v1/user_tasks",
+        "access": "write",
+        "desc": "Ставит задачу сотруднику. ",
+        "confirm": true
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Сводная аналитика компании",
+        "source": "analytics_service · company_analytics_service"
+      },
+      {
+        "label": "Агрегаты подчинённых агентов",
+        "source": "HR / Sales / CFO / CMO (handoff)"
+      },
+      {
+        "label": "Цели компании и количество сотрудников",
+        "source": "analytics_ai_service"
+      },
+      {
+        "label": "Корпоративные документы",
+        "source": "Qdrant (RAG)"
+      }
+    ],
+    "parentId": null
+  },
+  {
+    "id": "hr",
+    "name": "HR Agent",
+    "title": "Персонал · найм · адаптация",
+    "level": "specialist",
+    "emoji": "👥",
+    "accent": "teal",
+    "instruction": "Ты — HR-агент. Отвечаешь сотрудникам на вопросы по политикам, льготам и процессам, опираясь на корпоративные документы (RAG). Помогаешь с рекрутингом, онбордингом и оценкой сотрудников. Не раскрываешь персональные данные тем, у кого нет прав. Создание задач/писем — только после подтверждения.\n\n",
+    "accessRoles": [
+      "CEO agent"
+    ],
+    "whatsapp": true,
+    "tools": [
+      {
+        "name": "route_to_agent",
+        "endpoint": "делегирование на sub agents",
+        "access": "read",
+        "desc": "Делегирует подзадачу нужному специалисту и ждёт результат."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Данные которые пришли от sub agents",
+        "source": "sub agents данные"
+      }
+    ],
+    "parentId": "ceo"
+  },
+  {
+    "id": "sales",
+    "name": "РОП Agent",
+    "title": "Воронка · лиды · звонки",
+    "level": "specialist",
+    "emoji": "📈",
+    "accent": "amber",
+    "instruction": "Ты — Sales-агент. Ведёшь воронку продаж, анализируешь лиды и звонки, подсказываешь следующий шаг по сделке. Используешь транскрипты звонков для оценки качества и конверсии. Изменение стадий сделок и отправка сообщений — с подтверждением.",
+    "accessRoles": [
+      "seller",
+      "manager",
+      "admin",
+      "super"
+    ],
+    "whatsapp": false,
+    "tools": [
+      {
+        "name": "get_funnel",
+        "endpoint": "GET /api/v1/sales_funnel",
+        "access": "read",
+        "desc": "Сделки и стадии воронки."
+      },
+      {
+        "name": "list_leads",
+        "endpoint": "GET /api/v1/lead_webhook",
+        "access": "read",
+        "desc": "Входящие лиды и их источники."
+      },
+      {
+        "name": "call_insights",
+        "endpoint": "GET /api/v1/telephony (recordings)",
+        "access": "read",
+        "desc": "Записи и транскрипты звонков."
+      },
+      {
+        "name": "update_lead_stage",
+        "endpoint": "PATCH /api/v1/sales_funnel/{id}",
+        "access": "write",
+        "confirm": true,
+        "desc": "Двигает сделку по стадиям."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Сделки и конверсия воронки",
+        "source": "sales_funnel_lead_service"
+      },
+      {
+        "label": "Лиды и источники",
+        "source": "lead_webhook_service"
+      },
+      {
+        "label": "Звонки и транскрипты",
+        "source": "telephony_recording_service · binotel/onlinepbx"
+      },
+      {
+        "label": "Сообщения клиентам",
+        "source": "waha_whatsapp_service"
+      }
+    ],
+    "parentId": "ceo"
+  },
+  {
+    "id": "cfo",
+    "name": "CFO",
+    "title": "Финансы · выручка · затраты",
+    "level": "specialist",
+    "emoji": "💰",
+    "accent": "emerald",
+    "instruction": "Ты — CFO-агент для руководства. Считаешь и объясняешь финансовые метрики: выручку из воронки, конверсию в деньги, динамику. Готовишь короткие финансовые сводки (в т.ч. в WhatsApp). Только чтение данных; рекомендации — без действий над БД.",
+    "accessRoles": [
+      "Finance dept",
+      "admin",
+      "super",
+      "CEO / C-level"
+    ],
+    "whatsapp": true,
+    "tools": [
+      {
+        "name": "revenue_metrics",
+        "endpoint": "GET /api/v1/analytic/revenue",
+        "access": "read",
+        "desc": "Выручка и динамика из воронки."
+      },
+      {
+        "name": "company_metrics",
+        "endpoint": "GET /api/v1/analytic/company",
+        "access": "read",
+        "desc": "Общие операционные метрики."
+      },
+      {
+        "name": "funnel_value",
+        "endpoint": "GET /api/v1/sales_funnel (aggregated)",
+        "access": "read",
+        "desc": "Денежная оценка сделок по стадиям."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Выручка и конверсия в деньги",
+        "source": "sales_funnel_lead_service (агрегаты)"
+      },
+      {
+        "label": "Операционные метрики",
+        "source": "company_analytics_service"
+      },
+      {
+        "label": "AI-объяснение трендов",
+        "source": "analytics_ai_service"
+      }
+    ],
+    "parentId": "ceo"
+  },
+  {
+    "id": "cmo",
+    "name": "CMO",
+    "title": "Маркетинг · лиды · контент",
+    "level": "specialist",
+    "emoji": "📣",
+    "accent": "fuchsia",
+    "instruction": "Ты — CMO-агент для руководства. Анализируешь источники лидов, эффективность каналов и контент. Готовишь маркетинговые сводки (в т.ч. в WhatsApp). Создание постов/объявлений — только после подтверждения.",
+    "accessRoles": [
+      "Marketing dept",
+      "admin",
+      "super",
+      "CEO / C-level"
+    ],
+    "whatsapp": true,
+    "tools": [
+      {
+        "name": "lead_sources",
+        "endpoint": "GET /api/v1/lead_webhook",
+        "access": "read",
+        "desc": "Источники и качество лидов по каналам."
+      },
+      {
+        "name": "site_insights",
+        "endpoint": "services/website_parser.py",
+        "access": "read",
+        "desc": "Контент и данные с сайта/лендингов."
+      },
+      {
+        "name": "marketing_metrics",
+        "endpoint": "GET /api/v1/analytic/company",
+        "access": "read",
+        "desc": "Маркетинговые метрики и воронка."
+      },
+      {
+        "name": "create_post",
+        "endpoint": "POST /api/v1/posts",
+        "access": "write",
+        "confirm": true,
+        "desc": "Публикует контент/пост (после подтверждения)."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Лиды по каналам",
+        "source": "lead_webhook_service"
+      },
+      {
+        "label": "Контент сайта/лендингов",
+        "source": "website_parser"
+      },
+      {
+        "label": "Маркетинговая аналитика",
+        "source": "analytics_service · analytics_ai_service"
+      }
+    ],
+    "parentId": "ceo"
+  },
+  {
+    "id": "agent-mqhnng3o-dzu0",
+    "name": "Рекрутер sub agent",
+    "title": "Опишите роль",
+    "level": "specialist",
+    "parentId": "hr",
+    "emoji": "🤖",
+    "accent": "cyan",
+    "instruction": "",
+    "accessRoles": [
+      "HR Agent"
+    ],
+    "whatsapp": false,
+    "tools": [
+      {
+        "name": "list_recruiting",
+        "endpoint": "GET /api/v1/recruiting",
+        "access": "read",
+        "desc": "Кандидаты, вакансии, статусы воронки найма."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Аналитика рекрутинга",
+        "source": "dashboard аналитики Рекрутинга"
+      }
+    ]
+  },
+  {
+    "id": "agent-mqhnnssy-0wpl",
+    "name": "Онбординг subagent",
+    "title": "Опишите роль",
+    "level": "specialist",
+    "parentId": "hr",
+    "emoji": "🤖",
+    "accent": "cyan",
+    "instruction": "",
+    "accessRoles": [
+      "HR Agent"
+    ],
+    "whatsapp": false,
+    "tools": [
+      {
+        "name": "onboarding_status",
+        "endpoint": "GET /api/v1/onboarding",
+        "access": "read",
+        "desc": "Прогресс адаптации сотрудников."
+      }
+    ],
+    "dataSources": [
+      {
+        "label": "Статусы онбординга сотрудников",
+        "source": "onboarding · company_onboarding_checklist"
+      }
+    ]
+  },
+  {
+    "id": "agent-mqhoaalq-ovcn",
+    "name": "Кадровый sub agent",
+    "title": "Опишите роль",
+    "level": "specialist",
+    "parentId": "hr",
+    "emoji": "🤖",
+    "accent": "cyan",
+    "instruction": "",
+    "accessRoles": [
+      "HR Agent"
+    ],
+    "whatsapp": false,
+    "tools": [],
+    "dataSources": [
+      {
+        "label": "Данные о пользователях на платформе",
+        "source": "номер телефона, почта, должность и тд."
+      }
+    ]
+  }
+]
