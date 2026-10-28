@@ -53,7 +53,7 @@ export const agentsApi = {
       return seed();
     }
     const existing = read();
-    if (existing && existing.length) return existing;
+    if (existing !== null) return existing;
     return seed();
   },
 
