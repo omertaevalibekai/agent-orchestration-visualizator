@@ -1,3 +1,5 @@
+[![CI](https://github.com/omertaevalibekai/agent-orchestration-visualizator/actions/workflows/ci.yml/badge.svg)](https://github.com/omertaevalibekai/agent-orchestration-visualizator/actions/workflows/ci.yml)
+
 # Карта агентов (Agents Map)
 
 Standalone-версия страницы «Карта агентов» из платформы  —
@@ -17,7 +19,7 @@ Standalone-версия страницы «Карта агентов» из пл
 ## Локальный запуск
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -65,3 +67,19 @@ cd agent-orchestration-visualizator
 npm ci
 npm run dev
 ```
+
+## Development checks
+
+Use Node.js 22.16 or later (CI uses Node.js 22):
+
+```sh
+npm ci
+npm run lint
+npm run typecheck
+npm run test:ci
+npm run build
+```
+
+No `.env` file or API keys are required for the default local application.
+Do not commit local credentials or browser data. Dependency updates are proposed
+weekly by Dependabot and must pass the same CI checks.
