@@ -5,6 +5,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Tailwind 4 requires a coordinated PostCSS/CSS migration and visual review.
+    # Continue receiving fixes within the current v3 major.
+    ignore:
+      - dependency-name: tailwindcss
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
