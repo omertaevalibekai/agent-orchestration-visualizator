@@ -83,3 +83,10 @@ npm run build
 No `.env` file or API keys are required for the default local application.
 Do not commit local credentials or browser data. Dependency updates are proposed
 weekly by Dependabot and must pass the same CI checks.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Tailwind remains on v3. A v4 upgrade needs a coordinated PostCSS/CSS migration
+and visual checks; automated major-version PRs for this dependency are deferred.
